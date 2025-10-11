@@ -1,0 +1,88 @@
+from collections import deque
+
+class JugState:
+    def __init__(self, X, Y):
+        self.X = X
+        self.Y = Y
+
+    def __eq__(self, other):
+        return self.X == other.X and self.Y == other.Y
+
+    def __hash__(self):
+        return hash((self.X, self.Y))
+
+    def __str__(self):
+        return f"({self.X} Gal, {self.Y} Gal)"
+
+def branching_factor(state):
+    actions = []
+    if state.X < 4:
+        actions.append("Fill 4-Gal Jug")
+    if state.Y < 3:
+        actions.append("Fill 3-Gal Jug")
+    if state.X > 0:
+        actions.append("Empty 4-Gal Jug")
+    if state.Y > 0:
+        actions.append("Empty 3-Gal Jug")
+    if state.X + state.Y >= 4 and state.Y > 0:
+        actions.append("Pour from 3-Gal to 4-Gal")
+    if state.X + state.Y >= 3 and state.X > 0:
+        actions.append("Pour from 4-Gal to 3-Gal")
+    if state.Y > 0:
+        actions.append("Pour All from 3-Gal to 4-Gal")
+    if state.X > 0:
+        actions.append("Pour All from 4-Gal to 3-Gal")
+
+    return actions
+
+def perform_action(state, action):
+    if action == "Fill 4-Gal Jug":
+        return JugState(4, state.Y)
+    elif action == "Fill 3-Gal Jug":
+        return JugState(state.X, 3)
+    elif action == "Empty 4-Gal Jug":
+        return JugState(0, state.Y)
+    elif action == "Empty 3-Gal Jug":
+        return JugState(state.X, 0)
+    elif action == "Pour from 3-Gal to 4-Gal":
+      return JugState(4, state.Y - (4-state.X))
+    elif action == "Pour from 4-Gal to 3-Gal":
+        return JugState(state.X-(3-state.Y), 3)
+    elif action == "Pour All from 3-Gal to 4-Gal":
+        return JugState(state.X + state.Y, 0)
+    elif action == "Pour All from 4-Gal to 3-Gal":
+        return JugState(0, state.Y + state.X)
+
+
+def solve_jug_problem():
+    start_state = JugState(0, 0)
+    goal_state = JugState(2, 0)
+
+    visited = set()
+    queue = deque([(start_state, [])])
+
+    while queue:
+        current_state, actions = queue.popleft()
+
+        if current_state == goal_state:
+            return actions
+
+        visited.add(current_state)
+
+        possible_actions = branching_factor(current_state)
+        for action in possible_actions:
+            next_state = perform_action(current_state, action)
+            if next_state not in visited:
+                next_actions = actions + [action]
+                queue.append((next_state, next_actions))
+
+    return None
+
+if __name__ == "__main__":
+    solution = solve_jug_problem()
+    if solution:
+        print("Solution:")
+        for i, action in enumerate(solution, start=1):
+            print(f"{i}. {action}")
+    else:
+        print("No solution found.")
